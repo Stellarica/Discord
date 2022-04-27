@@ -48,7 +48,6 @@ application {
 
 gitHooks {
     setHooks(
-        // Temporarily removed, not worried about formatting and stuff yet:tm:
         mapOf("pre-commit" to "detekt")
     )
 }
@@ -68,7 +67,6 @@ tasks.jar {
 }
 
 java {
-    // Current LTS version of Java
     sourceCompatibility = JavaVersion.VERSION_17
     targetCompatibility = JavaVersion.VERSION_17
 }
