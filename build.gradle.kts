@@ -2,12 +2,8 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     application
-
     kotlin("jvm")
-
-    id("com.github.jakemarsden.git-hooks")
     id("com.github.johnrengelman.shadow")
-    id("io.gitlab.arturbosch.detekt")
 }
 
 group = "io.github.hydrazinemc"
@@ -24,8 +20,6 @@ repositories {
 }
 
 dependencies {
-    detektPlugins(libs.detekt)
-
     implementation(libs.kord.extensions)
     implementation(libs.kotlin.stdlib)
 
@@ -46,12 +40,6 @@ application {
     mainClassName = "io.github.hydrazinemc.bot.HydrazineBotKt"
 }
 
-gitHooks {
-    setHooks(
-        mapOf("pre-commit" to "detekt")
-    )
-}
-
 tasks.withType<KotlinCompile> {
     kotlinOptions.jvmTarget = "17"
 
@@ -69,9 +57,4 @@ tasks.jar {
 java {
     sourceCompatibility = JavaVersion.VERSION_17
     targetCompatibility = JavaVersion.VERSION_17
-}
-
-detekt {
-    buildUponDefaultConfig = true
-    config = rootProject.files("detekt.yml")
 }

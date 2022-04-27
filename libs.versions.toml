@@ -1,5 +1,4 @@
 [versions]
-detekt = "1.19.0"  # Note: Plugin versions must be updated in the settings.gradle.kts too
 kotlin = "1.6.21"  # Note: Plugin versions must be updated in the settings.gradle.kts too
 
 groovy = "4.0.2"
@@ -11,7 +10,6 @@ exposed = "0.38.1"
 sqlite-jdbc = "3.30.1"
 
 [libraries]
-detekt = { module = "io.gitlab.arturbosch.detekt:detekt-formatting", version.ref = "detekt" }
 groovy = { module = "org.apache.groovy:groovy", version.ref = "groovy" }
 kord-extensions = { module = "com.kotlindiscord.kord.extensions:kord-extensions", version.ref = "kord-extensions" }
 kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib-jdk8" }
