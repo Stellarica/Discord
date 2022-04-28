@@ -4,6 +4,9 @@ import com.kotlindiscord.kord.extensions.ExtensibleBot
 import com.kotlindiscord.kord.extensions.utils.env
 import dev.kord.common.entity.PresenceStatus
 import dev.kord.common.entity.Snowflake
+import io.github.hydrazinemc.bot.database.GuildConfigTable
+import io.github.hydrazinemc.bot.database.PunishmentLogTable
+import io.github.hydrazinemc.bot.extensions.ModerationExtension
 import io.github.hydrazinemc.bot.extensions.TestExtension
 import io.github.hydrazinemc.bot.extensions.TestThing
 import mu.KotlinLogging
@@ -27,7 +30,7 @@ suspend fun main() {
 
 	newSuspendedTransaction {
 		addLogger(Slf4jSqlDebugLogger)
-		SchemaUtils.create(TestThing)
+		SchemaUtils.create(PunishmentLogTable, GuildConfigTable)
 	}
 
 	val bot = ExtensibleBot(env("TOKEN")) {
@@ -36,7 +39,8 @@ suspend fun main() {
 			defaultGuild = TEST_SERVER_ID
 		}
 		extensions {
-			add(::TestExtension)
+			// add(::TestExtension)
+			add(::ModerationExtension)
 		}
 		presence {
 			status = PresenceStatus.DoNotDisturb
