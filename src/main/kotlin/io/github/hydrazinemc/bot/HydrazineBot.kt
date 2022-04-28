@@ -39,7 +39,6 @@ suspend fun main() {
 			defaultGuild = TEST_SERVER_ID
 		}
 		extensions {
-			// add(::TestExtension)
 			add(::ModerationExtension)
 		}
 		presence {
