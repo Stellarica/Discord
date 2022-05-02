@@ -1,6 +1,7 @@
 package io.github.hydrazinemc.bot.database
 
 import dev.kord.common.entity.Snowflake
+import dev.kord.core.behavior.GuildBehavior
 import org.jetbrains.exposed.dao.id.LongIdTable
 import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
@@ -18,19 +19,37 @@ object GuildConfigTable: LongIdTable() {
 	val botLogChannel = varchar("botLogChannel", 256) // The bot log channel ID
 }
 
-fun ensureHasConfig(guild: Snowflake) {
+fun ensureHasConfig(guildId: Snowflake) {
 	transaction {
-		if ((GuildConfigTable.select(GuildConfigTable.guild eq guild.value.toString()).fetchSize ?: 0) == 0) {
+		if ((GuildConfigTable.select(GuildConfigTable.guild eq guildId.value.toString()).fetchSize ?: 0) == 0) {
 			GuildConfigTable.insert { row ->
-				row[GuildConfigTable.guild] = guild.value.toString()
-				row[GuildConfigTable.modrole] = ""
-				row[GuildConfigTable.adminrole] = ""
-				row[GuildConfigTable.punishmentLogChannel] = ""
-				row[GuildConfigTable.botLogChannel] = ""
+				row[guild] = guildId.value.toString()
+				row[modrole] = ""
+				row[adminrole] = ""
+				row[punishmentLogChannel] = ""
+				row[botLogChannel] = ""
 			}
 		}
 	}
 }
+
+
+var GuildBehavior.modRole: Snowflake?
+	get() = Snowflake(value=getGuildConfig(this.id, GuildConfigTable.modrole) ?: "")
+	set(value) = setGuildConfig(this.id, GuildConfigTable.modrole, value?.value.toString())
+
+var GuildBehavior.adminRole: Snowflake?
+	get() = Snowflake(value=getGuildConfig(this.id, GuildConfigTable.adminrole) ?: "")
+	set(value) = setGuildConfig(this.id, GuildConfigTable.adminrole, value?.value.toString())
+
+var GuildBehavior.punishmentLogChannel: Snowflake?
+	get() = Snowflake(value=getGuildConfig(this.id, GuildConfigTable.punishmentLogChannel) ?: "")
+	set(value) = setGuildConfig(this.id, GuildConfigTable.punishmentLogChannel, value?.value.toString())
+
+var GuildBehavior.botLogChannel: Snowflake?
+	get() = Snowflake(value=getGuildConfig(this.id, GuildConfigTable.botLogChannel) ?: "")
+	set(value) = setGuildConfig(this.id, GuildConfigTable.botLogChannel, value?.value.toString())
+
 
 fun setGuildConfig(guild: Snowflake, column: Column<String>, value: String) {
 	ensureHasConfig(guild)
