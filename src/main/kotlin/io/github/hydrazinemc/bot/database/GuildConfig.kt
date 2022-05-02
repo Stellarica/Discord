@@ -13,8 +13,6 @@ import org.jetbrains.exposed.sql.update
 
 object GuildConfigTable: LongIdTable() {
 	val guild = varchar("guild", 256) // The guild
-	val modrole = varchar("modrole", 256) // The moderation role ID
-	val adminrole = varchar("adminrole", 256) // The admin role ID
 	val punishmentLogChannel = varchar("punishmentLogChannel", 256) // The punishment log channel ID
 	val botLogChannel = varchar("botLogChannel", 256) // The bot log channel ID
 }
@@ -24,23 +22,12 @@ fun ensureHasConfig(guildId: Snowflake) {
 		if ((GuildConfigTable.select(GuildConfigTable.guild eq guildId.value.toString()).fetchSize ?: 0) == 0) {
 			GuildConfigTable.insert { row ->
 				row[guild] = guildId.value.toString()
-				row[modrole] = ""
-				row[adminrole] = ""
 				row[punishmentLogChannel] = ""
 				row[botLogChannel] = ""
 			}
 		}
 	}
 }
-
-
-var GuildBehavior.modRole: Snowflake?
-	get() = Snowflake(value=getGuildConfig(this.id, GuildConfigTable.modrole) ?: "")
-	set(value) = setGuildConfig(this.id, GuildConfigTable.modrole, value?.value.toString())
-
-var GuildBehavior.adminRole: Snowflake?
-	get() = Snowflake(value=getGuildConfig(this.id, GuildConfigTable.adminrole) ?: "")
-	set(value) = setGuildConfig(this.id, GuildConfigTable.adminrole, value?.value.toString())
 
 var GuildBehavior.punishmentLogChannel: Snowflake?
 	get() = Snowflake(value=getGuildConfig(this.id, GuildConfigTable.punishmentLogChannel) ?: "")

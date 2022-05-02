@@ -21,9 +21,7 @@ class ModerationExtension : Extension() {
 
 			check { hasPermission(Permission.ManageGuild) }
 			action {
-				setGuildConfig(this@publicSlashCommand.guildId!!, when (arguments.option) {
-					"ar" -> GuildConfigTable.adminrole
-					"mr" -> GuildConfigTable.modrole
+				/*, when (arguments.option) {
 					"pc" -> GuildConfigTable.punishmentLogChannel
 					"blc" -> GuildConfigTable.botLogChannel
 					else -> {
@@ -31,6 +29,8 @@ class ModerationExtension : Extension() {
 						return@action
 					}
 				}, arguments.value)
+
+				 */
 			}
 		}
 	}
@@ -40,8 +40,6 @@ class ModerationExtension : Extension() {
 			name = "option"
 			description = "The configuration option to set"
 			choices = mutableMapOf(
-				"adminrole" to "ar",
-				"modrole" to "mr",
 				"punishment-channel" to "pc",
 				"bot-log-channel" to "blc"
 			)
