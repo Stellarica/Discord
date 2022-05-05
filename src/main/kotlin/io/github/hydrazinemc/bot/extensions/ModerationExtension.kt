@@ -6,20 +6,24 @@ import com.kotlindiscord.kord.extensions.commands.application.slash.converters.i
 import com.kotlindiscord.kord.extensions.commands.converters.impl.FormattedTimestamp
 import com.kotlindiscord.kord.extensions.commands.converters.impl.channel
 import com.kotlindiscord.kord.extensions.commands.converters.impl.defaultingTimestamp
-import com.kotlindiscord.kord.extensions.commands.converters.impl.snowflake
 import com.kotlindiscord.kord.extensions.commands.converters.impl.string
-import com.kotlindiscord.kord.extensions.commands.converters.impl.timestamp
 import com.kotlindiscord.kord.extensions.commands.converters.impl.user
 import com.kotlindiscord.kord.extensions.extensions.Extension
 import com.kotlindiscord.kord.extensions.extensions.publicSlashCommand
 import com.kotlindiscord.kord.extensions.time.TimestampType
 import com.kotlindiscord.kord.extensions.types.respond
 import dev.kord.common.entity.Permission
-import io.github.hydrazinemc.bot.database.GuildConfigTable
+import dev.kord.common.entity.Snowflake
+import dev.kord.core.entity.User
 import io.github.hydrazinemc.bot.database.botLogChannel
 import io.github.hydrazinemc.bot.database.punishmentLogChannel
-import io.github.hydrazinemc.bot.database.setGuildConfig
+import io.github.hydrazinemc.bot.logger
+import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
+import org.jetbrains.exposed.dao.id.LongIdTable
+import org.jetbrains.exposed.sql.insert
+import org.jetbrains.exposed.sql.select
+import org.jetbrains.exposed.sql.transactions.transaction
 
 class ModerationExtension : Extension() {
 	override val name: String = "moderation"
@@ -46,15 +50,30 @@ class ModerationExtension : Extension() {
 		}
 
 		publicSlashCommand(::ModerationCommandArgs) {
-			name = "mute"
-			description = "Mute a user"
+			name = "punish"
+			description = "Punish a user"
 
 			// TODO: change this to a role; people might want to let mods use this but not discord builtin mute
 			check { hasPermission(Permission.MuteMembers) }
+
 			action {
+				val data = Punishment(
+					guild!!.id,
+					user.id,
+					arguments.subject.id,
+					PunishmentType.valueOf(arguments.action),
+					arguments.reason,
+					arguments.expireTime!!.instant,
+					Clock.System.now()
+				)
+				punish(data)
+				logPunishment(data)
 				respond { content = "Not yet implemented" }
 			}
 		}
+	}
+	private fun punish(data: Punishment) {
+
 	}
 
 	inner class GuildConfigArgs : Arguments() {
@@ -77,6 +96,15 @@ class ModerationExtension : Extension() {
 			name = "user"
 			description = "The user in question"
 		}
+		val action by stringChoice { name = "action"
+			description = "The action to take"
+			choices = mutableMapOf(
+				"mute" to "MUTE",
+				"kick" to "KICK",
+				"timeout" to "TIMEOUT",
+				"ban" to "BAN"
+			)
+		}
 		val reason by string {
 			name = "reason"
 			description = "The reasoning behind this action"
@@ -87,4 +115,85 @@ class ModerationExtension : Extension() {
 			defaultValue = FormattedTimestamp(Instant.DISTANT_FUTURE, TimestampType.ShortDateTime)
 		}
 	}
+}
+
+object PunishmentLogTable: LongIdTable() {
+	val guild = varchar("guild", 256) // The guild this took place in
+	val expireTime = long("expireTime") // punishment expiration time
+	val timeApplied = long("timeApplied") // time punishment was applied
+	val reason = varchar("reason", 256)
+	val type = varchar("type", 256) // either WARN, MUTE, TIMEOUT, or BAN
+	val punisher = varchar("punisher", 256) // ID of the person who applied the punishment
+	val target = varchar("target", 256) // ID of the person who was punished
+}
+
+
+private fun logPunishmentToDatabase(
+	data: Punishment
+) {
+	transaction {
+		PunishmentLogTable.insert { row ->
+			row[guild] = data.guild.value.toString()
+			row[expireTime] = data.expireTime.toEpochMilliseconds()
+			row[timeApplied] = data.timeApplied.toEpochMilliseconds()
+			row[reason] = data.reason
+			row[type] = data.type.toString()
+			row[punisher] = data.punisher.value.toString()
+			row[target] = data.target.value.toString()
+		}
+	}
+}
+
+private fun logPunishmentToChannel(data: Punishment) {
+}
+
+
+/**
+ * Logs a punishment to the database, and
+ * logs it in the guild's configured channel
+ */
+private fun logPunishment(data: Punishment) {
+	if (data.expired) {
+		logger.warn{"Logging expired punishment"}
+	}
+	logPunishmentToDatabase(data)
+	logPunishmentToChannel(data)
+}
+
+private data class Punishment(
+	val guild: Snowflake,
+	val punisher: Snowflake,
+	val target: Snowflake,
+	val type: PunishmentType,
+	val reason: String,
+	val expireTime: Instant,
+	val timeApplied: Instant) {
+	val expired: Boolean
+		get() = expireTime.toEpochMilliseconds() < Clock.System.now().toEpochMilliseconds()
+}
+
+/**
+ * Global (cross-guild) punishments for this user
+ */
+private val User.punishments: Set<Punishment>
+	get() = transaction {
+		val punishments = mutableListOf<Punishment>()
+		PunishmentLogTable.select { PunishmentLogTable.target eq this@punishments.id.value.toString() }.forEach {row ->
+			punishments.add(
+				Punishment(
+					Snowflake(row[PunishmentLogTable.guild]),
+					Snowflake(row[PunishmentLogTable.punisher]),
+					Snowflake(row[PunishmentLogTable.target]),
+					PunishmentType.valueOf(row[PunishmentLogTable.type]),
+					row[PunishmentLogTable.reason],
+					Instant.fromEpochMilliseconds(row[PunishmentLogTable.expireTime]),
+					Instant.fromEpochMilliseconds(row[PunishmentLogTable.timeApplied]),
+				)
+			)
+		}
+		return@transaction punishments.toSet()
+	}
+
+private enum class PunishmentType {
+	WARN, MUTE, TIMEOUT, KICK, BAN
 }

@@ -5,8 +5,8 @@ import com.kotlindiscord.kord.extensions.utils.env
 import dev.kord.common.entity.PresenceStatus
 import dev.kord.common.entity.Snowflake
 import io.github.hydrazinemc.bot.database.GuildConfigTable
-import io.github.hydrazinemc.bot.database.PunishmentLogTable
 import io.github.hydrazinemc.bot.extensions.ModerationExtension
+import io.github.hydrazinemc.bot.extensions.PunishmentLogTable
 import mu.KotlinLogging
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
