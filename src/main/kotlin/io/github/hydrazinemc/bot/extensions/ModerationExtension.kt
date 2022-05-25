@@ -6,6 +6,7 @@ import com.kotlindiscord.kord.extensions.commands.application.slash.converters.i
 import com.kotlindiscord.kord.extensions.commands.converters.impl.FormattedTimestamp
 import com.kotlindiscord.kord.extensions.commands.converters.impl.channel
 import com.kotlindiscord.kord.extensions.commands.converters.impl.defaultingTimestamp
+import com.kotlindiscord.kord.extensions.commands.converters.impl.int
 import com.kotlindiscord.kord.extensions.commands.converters.impl.string
 import com.kotlindiscord.kord.extensions.commands.converters.impl.user
 import com.kotlindiscord.kord.extensions.extensions.Extension
@@ -64,16 +65,27 @@ class ModerationExtension : Extension() {
 					PunishmentType.valueOf(arguments.action),
 					arguments.reason,
 					arguments.expireTime!!.instant,
-					Clock.System.now()
+					Clock.System.now(),
+					null
 				)
 				punish(data)
 				logPunishment(data)
 				respond { content = "Not yet implemented" }
 			}
 		}
+
+		publicSlashCommand(::PardonCommandArgs) {
+			name = "pardon"
+			description = "Pardon a punishment"
+			action {
+				PunishmentLogTable.select { PunishmentLogTable.id eq this@publicSlashCommand.arguments.id }.forEach {row ->
+					// Need to handle: punishment not in guild, punishment pardoned, punishment doesn't exist
+				}
+			}
+
+		}
 	}
 	private fun punish(data: Punishment) {
-
 	}
 
 	inner class GuildConfigArgs : Arguments() {
@@ -88,6 +100,13 @@ class ModerationExtension : Extension() {
 		val value by channel {
 			name = "value"
 			description = "The new value"
+		}
+	}
+
+	inner class PardonCommandArgs : Arguments() {
+		val id by int {
+			name = "punishment id"
+			description = "The id of the punishment to pardon"
 		}
 	}
 
@@ -125,6 +144,8 @@ object PunishmentLogTable: LongIdTable() {
 	val type = varchar("type", 256) // either WARN, MUTE, TIMEOUT, or BAN
 	val punisher = varchar("punisher", 256) // ID of the person who applied the punishment
 	val target = varchar("target", 256) // ID of the person who was punished
+	val pardoned = varchar("pardoned", 256) // ID of the user who pardoned the punishment,
+										// if this has not been stored, the punishment hasn't been pardoned.
 }
 
 
@@ -140,11 +161,13 @@ private fun logPunishmentToDatabase(
 			row[type] = data.type.toString()
 			row[punisher] = data.punisher.value.toString()
 			row[target] = data.target.value.toString()
+			row[pardoned] = data.pardoner?.value.toString()
 		}
 	}
 }
 
 private fun logPunishmentToChannel(data: Punishment) {
+
 }
 
 
@@ -167,9 +190,12 @@ private data class Punishment(
 	val type: PunishmentType,
 	val reason: String,
 	val expireTime: Instant,
-	val timeApplied: Instant) {
+	val timeApplied: Instant,
+	val pardoner: Snowflake?) {
 	val expired: Boolean
 		get() = expireTime.toEpochMilliseconds() < Clock.System.now().toEpochMilliseconds()
+	val pardoned: Boolean
+		get() = pardoner != null
 }
 
 /**
@@ -188,6 +214,7 @@ private val User.punishments: Set<Punishment>
 					row[PunishmentLogTable.reason],
 					Instant.fromEpochMilliseconds(row[PunishmentLogTable.expireTime]),
 					Instant.fromEpochMilliseconds(row[PunishmentLogTable.timeApplied]),
+					Snowflake(row[PunishmentLogTable.pardoned]),
 				)
 			)
 		}
