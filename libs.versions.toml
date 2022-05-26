@@ -2,7 +2,7 @@
 kotlin = "1.6.21"  # Note: Plugin versions must be updated in the settings.gradle.kts too
 
 groovy = "4.0.2"
-kord-extensions = "1.5.2-RC1"
+kord-extensions = "1.5.4-SNAPSHOT"
 logging = "2.1.21"
 logback = "1.2.11"
 
@@ -17,6 +17,5 @@ logback = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
 logging = { module = "io.github.microutils:kotlin-logging", version.ref = "logging" }
 
 exposed-core = { module = "org.jetbrains.exposed:exposed-core", version.ref = "exposed" }
-# exposed-dao = { module = "org.jetbrains.exposed:exposed-dao", version.ref = "exposed" }
 exposed-jdbc = { module = "org.jetbrains.exposed:exposed-jdbc", version.ref = "exposed" }
 sqlite-jdbc = { module = "org.xerial:sqlite-jdbc", version.ref = "sqlite-jdbc"}
