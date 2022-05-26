@@ -22,9 +22,12 @@ import io.github.hydrazinemc.bot.logger
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import org.jetbrains.exposed.dao.id.LongIdTable
+import org.jetbrains.exposed.sql.Column
+import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.sql.update
 
 class ModerationExtension : Extension() {
 	override val name: String = "moderation"
@@ -33,8 +36,8 @@ class ModerationExtension : Extension() {
 		publicSlashCommand(::GuildConfigArgs) {
 			name = "config"
 			description = "Configure bot settings"
-
 			check { hasPermission(Permission.ManageGuild) }
+
 			action {
 				// ngl this seems like purified jank
 				var thing = when (arguments.option) {
@@ -144,56 +147,66 @@ object PunishmentLogTable: LongIdTable() {
 	val type = varchar("type", 256) // either WARN, MUTE, TIMEOUT, or BAN
 	val punisher = varchar("punisher", 256) // ID of the person who applied the punishment
 	val target = varchar("target", 256) // ID of the person who was punished
-	val pardoned = varchar("pardoned", 256) // ID of the user who pardoned the punishment,
+	val pardoner = varchar("pardoned", 256) // ID of the user who pardoned the punishment,
 										// if this has not been stored, the punishment hasn't been pardoned.
-}
-
-
-private fun logPunishmentToDatabase(
-	data: Punishment
-) {
-	transaction {
-		PunishmentLogTable.insert { row ->
-			row[guild] = data.guild.value.toString()
-			row[expireTime] = data.expireTime.toEpochMilliseconds()
-			row[timeApplied] = data.timeApplied.toEpochMilliseconds()
-			row[reason] = data.reason
-			row[type] = data.type.toString()
-			row[punisher] = data.punisher.value.toString()
-			row[target] = data.target.value.toString()
-			row[pardoned] = data.pardoner?.value.toString()
-		}
-	}
 }
 
 private fun logPunishmentToChannel(data: Punishment) {
 
 }
 
+private data class Punishment(val id: Long){
+	// cache stuff so we aren't spamming as many db transactions.
+	// However, this does have side affects. If multiple Punishments of
+	// the same ID exist, the cache of one might become outdated
+	private var cache = mutableMapOf<Column<Any?>, Any?>()
+	private val dbRow : ResultRow?
+		get() = PunishmentLogTable.select{ PunishmentLogTable.id eq this@Punishment.id }.firstOrNull()
 
-/**
- * Logs a punishment to the database, and
- * logs it in the guild's configured channel
- */
-private fun logPunishment(data: Punishment) {
-	if (data.expired) {
-		logger.warn{"Logging expired punishment"}
+	private fun <T> set(col: Column<T>, value: T) {
+		transaction {
+			PunishmentLogTable.update ({PunishmentLogTable.id eq this@Punishment.id}) {
+				it[col] = value
+			}
+		}
+		cache[col] = value
 	}
-	logPunishmentToDatabase(data)
-	logPunishmentToChannel(data)
-}
+	private fun <T> get(col: Column<T>): T? {
+		if (cache.containsKey(col)) { return cache[col] as T }
+		transaction {
+			dbRow?[col]
+		}
+	}
 
-private data class Punishment(
-	val guild: Snowflake,
-	val punisher: Snowflake,
-	val target: Snowflake,
-	val type: PunishmentType,
-	val reason: String,
-	val expireTime: Instant,
-	val timeApplied: Instant,
-	val pardoner: Snowflake?) {
-	val expired: Boolean
-		get() = expireTime.toEpochMilliseconds() < Clock.System.now().toEpochMilliseconds()
+	var guild: Snowflake?
+		get() = get(PunishmentLogTable.guild)?.let { Snowflake(it) }
+		set(value) = set(PunishmentLogTable.guild, value?.value.toString())
+	var punisher: Snowflake?
+		get() = get(PunishmentLogTable.punisher)?.let { Snowflake(it) }
+		set(value) = set(PunishmentLogTable.punisher, value?.value.toString())
+	var target: Snowflake?
+		get() = get(PunishmentLogTable.target)?.let { Snowflake(it) }
+		set(value) = set(PunishmentLogTable.target, value?.value.toString())
+	var type: PunishmentType?
+		get() = get(PunishmentLogTable.type)?.let { PunishmentType.valueOf(it) }
+		set(value) = set(PunishmentLogTable.type, value.toString())
+
+	// TODO: fix these because we can't assume the user isn't trying to null them out
+	var reason: String?
+		get() = get(PunishmentLogTable.reason)
+		set(value) = set(PunishmentLogTable.reason, value!!) // this needs help
+	var expireTime: Instant?
+		get() = get(PunishmentLogTable.expireTime)?.let {Instant.fromEpochMilliseconds(it)}
+		set(value) = set(PunishmentLogTable.expireTime, value?.toEpochMilliseconds()!!) // so does this
+	var timeApplied: Instant?
+		get() = get(PunishmentLogTable.timeApplied)?.let {Instant.fromEpochMilliseconds(it)}
+		set(value) = set(PunishmentLogTable.timeApplied, value?.toEpochMilliseconds()!!) // and this
+
+	var pardoner: Snowflake?
+		get() = transaction { Snowflake(dbRow?.get(PunishmentLogTable.pardoner) ?: ) }
+	val expired: Boolean?
+		get() = (expireTime?.toEpochMilliseconds() ?: run { return null }) < Clock.System.now().toEpochMilliseconds()
+
 	val pardoned: Boolean
 		get() = pardoner != null
 }
@@ -205,18 +218,7 @@ private val User.punishments: Set<Punishment>
 	get() = transaction {
 		val punishments = mutableListOf<Punishment>()
 		PunishmentLogTable.select { PunishmentLogTable.target eq this@punishments.id.value.toString() }.forEach {row ->
-			punishments.add(
-				Punishment(
-					Snowflake(row[PunishmentLogTable.guild]),
-					Snowflake(row[PunishmentLogTable.punisher]),
-					Snowflake(row[PunishmentLogTable.target]),
-					PunishmentType.valueOf(row[PunishmentLogTable.type]),
-					row[PunishmentLogTable.reason],
-					Instant.fromEpochMilliseconds(row[PunishmentLogTable.expireTime]),
-					Instant.fromEpochMilliseconds(row[PunishmentLogTable.timeApplied]),
-					Snowflake(row[PunishmentLogTable.pardoned]),
-				)
-			)
+			punishments.add(Punishment(row[PunishmentLogTable.id]))
 		}
 		return@transaction punishments.toSet()
 	}
