@@ -6,7 +6,8 @@ import dev.kord.common.entity.PresenceStatus
 import dev.kord.common.entity.Snowflake
 import io.github.hydrazinemc.bot.database.GuildConfigTable
 import io.github.hydrazinemc.bot.extensions.BotStatusExtension
-import io.github.hydrazinemc.bot.extensions.ModerationExtension
+import io.github.hydrazinemc.bot.extensions.GuildConfigExtension
+import io.github.hydrazinemc.bot.extensions.moderation.ModerationExtension
 import io.github.hydrazinemc.bot.extensions.moderation.PunishmentLogTable
 import mu.KotlinLogging
 import org.jetbrains.exposed.sql.Database
@@ -40,6 +41,7 @@ suspend fun main() {
 		extensions {
 			add(::ModerationExtension)
 			add(::BotStatusExtension)
+			add(::GuildConfigExtension)
 		}
 		presence {
 			status = PresenceStatus.DoNotDisturb

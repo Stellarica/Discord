@@ -3,7 +3,6 @@ package io.github.hydrazinemc.bot.extensions.moderation
 import dev.kord.common.entity.Snowflake
 import dev.kord.core.behavior.GuildBehavior
 import dev.kord.core.entity.User
-import io.github.hydrazinemc.bot.logger
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import org.jetbrains.exposed.dao.id.LongIdTable
@@ -36,7 +35,7 @@ private val User.punishments: Set<Punishment>
 	get() = transaction {
 		val punishments = mutableListOf<Punishment>()
 		PunishmentLogTable.select { PunishmentLogTable.target eq this@punishments.id.value.toString() }.forEach { row ->
-			punishments.add(getPunishment(row))
+			getPunishment(row)?.let { punishments.add(it) }
 		}
 		return@transaction punishments.toSet()
 	}
@@ -45,13 +44,14 @@ private val GuildBehavior.punishments: Set<Punishment>
 	get() = transaction {
 		val punishments = mutableListOf<Punishment>()
 		PunishmentLogTable.select { PunishmentLogTable.guild eq this@punishments.id.value.toString() }.forEach { row ->
-			punishments.add(getPunishment(row))
+			getPunishment(row)?.let { punishments.add(it) }
 		}
 		return@transaction punishments.toSet()
 	}
 
-fun getPunishment(row: ResultRow) =
-	Punishment(
+fun getPunishment(row: ResultRow?): Punishment? {
+	row ?: return null
+	return Punishment(
 		row[PunishmentLogTable.id].value,
 		Snowflake(row[PunishmentLogTable.guild]),
 		Snowflake(row[PunishmentLogTable.punisher]),
@@ -62,9 +62,10 @@ fun getPunishment(row: ResultRow) =
 		Instant.fromEpochMilliseconds(row[PunishmentLogTable.timeApplied]),
 		Snowflake(row[PunishmentLogTable.pardoned]),
 	)
+}
 
 fun getPunishment(punishmentID: Long) : Punishment? = transaction {
-	getPunishment(PunishmentLogTable.select { PunishmentLogTable.id eq punishmentID }.first())
+	getPunishment(PunishmentLogTable.select { PunishmentLogTable.id eq punishmentID }.firstOrNull())
 }
 
 object PunishmentLogTable: LongIdTable() {
@@ -95,23 +96,6 @@ private fun logPunishmentToDatabase(
 			row[pardoned] = data.pardoner?.value.toString()
 		}
 	}
-}
-
-private fun logPunishmentToChannel(data: Punishment) {
-
-}
-
-
-/**
- * Logs a punishment to the database, and
- * logs it in the guild's configured channel
- */
-private fun logPunishment(data: Punishment) {
-	if (data.expired) {
-		logger.warn{"Logging expired punishment"}
-	}
-	logPunishmentToDatabase(data)
-	logPunishmentToChannel(data)
 }
 
 enum class PunishmentType {
