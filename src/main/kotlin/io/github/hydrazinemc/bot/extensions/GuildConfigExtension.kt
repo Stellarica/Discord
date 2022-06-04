@@ -8,29 +8,44 @@ import com.kotlindiscord.kord.extensions.extensions.Extension
 import com.kotlindiscord.kord.extensions.extensions.publicSlashCommand
 import com.kotlindiscord.kord.extensions.types.respond
 import dev.kord.common.entity.Permission
-import io.github.hydrazinemc.bot.database.botLogChannel
-import io.github.hydrazinemc.bot.database.punishmentLogChannel
+import dev.kord.rest.builder.message.create.embed
+import io.github.hydrazinemc.bot.database.config
 
 class GuildConfigExtension: Extension() {
 	override val name = "config"
 	override suspend fun setup() {
 		publicSlashCommand(::GuildConfigArgs) {
-			name = "config"
+			name = "set-config"
 			description = "Configure bot settings"
 
 			check { hasPermission(Permission.ManageGuild) }
 			action {
 				// ngl this seems like purified jank
-				var thing = when (arguments.option) {
-					"pc" -> guild!!.punishmentLogChannel
-					"blc" -> guild!!.botLogChannel
+				val conf = guild!!.config
+				when (arguments.option) {
+					"pc" -> conf.punishmentLogChannel = arguments.value.id
+					"blc" -> conf.botLogChannel = arguments.value.id
 					else -> {
 						respond { content = "Somehow you chose an invalid option. This shouldn't be possible, and is a bug" }
 						return@action
 					}
 				}
-				thing = arguments.value.id
+				guild!!.config = conf
 				respond { content = "Set ${arguments.option} to ${arguments.value.mention}" }
+			}
+		}
+
+		publicSlashCommand {
+			name = "get-config"
+			description = "Show bot settings"
+
+			check { hasPermission(Permission.ManageGuild) }
+			action {
+				val conf = guild!!.config
+				respond { embed {
+					title = "HydrazineBot Configuration"
+					description = "Punishment Log: ${conf.punishmentLogChannel}\nBot Log: ${conf.botLogChannel}"
+				} }
 			}
 		}
 	}
