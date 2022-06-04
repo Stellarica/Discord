@@ -2,7 +2,9 @@ package io.github.hydrazinemc.bot.extensions.moderation
 
 import dev.kord.common.entity.Snowflake
 import dev.kord.core.behavior.GuildBehavior
+import dev.kord.core.behavior.UserBehavior
 import dev.kord.core.entity.User
+import io.github.hydrazinemc.bot.getSnowflake
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import org.jetbrains.exposed.dao.id.LongIdTable
@@ -26,12 +28,26 @@ data class Punishment(
 		get() = expireTime.toEpochMilliseconds() < Clock.System.now().toEpochMilliseconds()
 	val pardoned: Boolean
 		get() = pardoner != null
+
+	fun getFormattedText(): String {
+		return """
+			ID: $id
+			Guild: <todo>
+			Punisher: $punisher
+			Target: $target
+			Type: $type
+			Reason: $reason
+			Expire Time: $expireTime
+			Time Applied: $timeApplied
+			Pardoned By: $pardoner
+		""".trimIndent()
+	}
 }
 
 /**
  * Global (cross-guild) punishments for this user
  */
-private val User.punishments: Set<Punishment>
+val UserBehavior.punishments: Set<Punishment>
 	get() = transaction {
 		val punishments = mutableListOf<Punishment>()
 		PunishmentLogTable.select { PunishmentLogTable.target eq this@punishments.id.value.toString() }.forEach { row ->
@@ -60,7 +76,7 @@ fun getPunishment(row: ResultRow?): Punishment? {
 		row[PunishmentLogTable.reason],
 		Instant.fromEpochMilliseconds(row[PunishmentLogTable.expireTime]),
 		Instant.fromEpochMilliseconds(row[PunishmentLogTable.timeApplied]),
-		Snowflake(row[PunishmentLogTable.pardoned]),
+		getSnowflake(row[PunishmentLogTable.pardoned]),
 	)
 }
 
@@ -81,7 +97,7 @@ object PunishmentLogTable: LongIdTable() {
 }
 
 
-private fun logPunishmentToDatabase(
+fun logPunishmentToDatabase(
 	data: Punishment
 ) {
 	transaction {

@@ -13,6 +13,8 @@ import com.kotlindiscord.kord.extensions.extensions.publicSlashCommand
 import com.kotlindiscord.kord.extensions.time.TimestampType
 import com.kotlindiscord.kord.extensions.types.respond
 import dev.kord.common.entity.Permission
+import dev.kord.core.behavior.UserBehavior
+import dev.kord.rest.builder.message.create.embed
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 
@@ -53,14 +55,38 @@ class ModerationExtension : Extension() {
 				// Need to handle: punishment not in guild, punishment pardoned, punishment doesn't exist
 			}
 		}
+
+		publicSlashCommand(::ListCommandArgs) {
+			name = "list-punishments"
+			description = "List a user's punishments"
+
+			action {
+				var text = ""
+				arguments.user.punishments.forEach {
+					text += it.getFormattedText()
+				}
+				respond { embed {
+					title = "${arguments.user.username}'s punishments"
+					description = text
+				} }
+			}
+		}
 	}
 	private fun punish(data: Punishment) {
+		logPunishmentToDatabase(data)
 	}
 
 	inner class PardonCommandArgs : Arguments() {
 		val id by long {
-			name = "punishment id"
+			name = "punishment-id"
 			description = "The id of the punishment to pardon"
+		}
+	}
+
+	inner class ListCommandArgs : Arguments() {
+		val user by user {
+			name = "user"
+			description = "The user whose punishments to list"
 		}
 	}
 
