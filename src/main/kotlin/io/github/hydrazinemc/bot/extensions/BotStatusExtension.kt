@@ -8,6 +8,7 @@ import com.kotlindiscord.kord.extensions.extensions.Extension
 import com.kotlindiscord.kord.extensions.extensions.publicSlashCommand
 import com.kotlindiscord.kord.extensions.types.respond
 import dev.kord.common.entity.Permission
+import io.github.hydrazinemc.bot.logger
 
 class BotStatusExtension: Extension() {
 	override val name: String = "status"
@@ -26,6 +27,7 @@ class BotStatusExtension: Extension() {
 						"playing" -> playing(arguments.text)
 					}
 				}
+				logger.info { "Set bot status to ${arguments.type} ${arguments.text}" }
 				respond { content = "Set status to ${arguments.type} ${arguments.text}" }
 			}
 		}
