@@ -7,7 +7,7 @@ import dev.kord.common.entity.Snowflake
 import io.github.hydrazinemc.bot.database.GuildConfigTable
 import io.github.hydrazinemc.bot.extensions.BotStatusExtension
 import io.github.hydrazinemc.bot.extensions.ModerationExtension
-import io.github.hydrazinemc.bot.extensions.PunishmentLogTable
+import io.github.hydrazinemc.bot.extensions.moderation.PunishmentLogTable
 import mu.KotlinLogging
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
