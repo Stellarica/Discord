@@ -13,7 +13,6 @@ import com.kotlindiscord.kord.extensions.extensions.publicSlashCommand
 import com.kotlindiscord.kord.extensions.time.TimestampType
 import com.kotlindiscord.kord.extensions.types.respond
 import dev.kord.common.entity.Permission
-import dev.kord.core.behavior.UserBehavior
 import dev.kord.rest.builder.message.create.embed
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
@@ -63,15 +62,18 @@ class ModerationExtension : Extension() {
 			action {
 				var text = ""
 				arguments.user.punishments.forEach {
-					text += it.getFormattedText()
+					text += it.getFormattedText() + "\n\n"
 				}
-				respond { embed {
-					title = "${arguments.user.username}'s punishments"
-					description = text
-				} }
+				respond {
+					embed {
+						title = "${arguments.user.username}'s History"
+						description = text
+					}
+				}
 			}
 		}
 	}
+
 	private fun punish(data: Punishment) {
 		logPunishmentToDatabase(data)
 	}
@@ -95,7 +97,8 @@ class ModerationExtension : Extension() {
 			name = "user"
 			description = "The user in question"
 		}
-		val action by stringChoice { name = "action"
+		val action by stringChoice {
+			name = "action"
 			description = "The action to take"
 			choices = mutableMapOf(
 				"mute" to "MUTE",

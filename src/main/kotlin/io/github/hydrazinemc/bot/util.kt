@@ -11,7 +11,11 @@ import dev.kord.common.entity.Snowflake
  */
 fun getSnowflake(id: String?): Snowflake? {
 	id ?: return null
-	try { return Snowflake(id) }
-	catch (e: NumberFormatException) { return null }
+	try {
+		return Snowflake(id)
+	} catch (e: NumberFormatException) {
+		return null
+	}
 }
+
 fun getSnowflake(id: Long?) = id?.let { Snowflake(it) }

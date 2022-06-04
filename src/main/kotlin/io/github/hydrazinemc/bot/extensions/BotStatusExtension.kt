@@ -10,7 +10,7 @@ import com.kotlindiscord.kord.extensions.types.respond
 import dev.kord.common.entity.Permission
 import io.github.hydrazinemc.bot.logger
 
-class BotStatusExtension: Extension() {
+class BotStatusExtension : Extension() {
 	override val name: String = "status"
 
 	override suspend fun setup() {
@@ -32,10 +32,11 @@ class BotStatusExtension: Extension() {
 			}
 		}
 	}
-	inner class StatusCommandArgs: Arguments() {
+
+	inner class StatusCommandArgs : Arguments() {
 		val type by stringChoice {
-			name="type"
-			description="status type"
+			name = "type"
+			description = "status type"
 			choices = mutableMapOf(
 				"watching" to "watching",
 				"playing" to "playing",
@@ -43,8 +44,8 @@ class BotStatusExtension: Extension() {
 			)
 		}
 		val text by string {
-			name="text"
-			description="the text to set the status to"
+			name = "text"
+			description = "the text to set the status to"
 		}
 	}
 }

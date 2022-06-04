@@ -12,20 +12,20 @@ import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.update
 
 
-object GuildConfigTable: LongIdTable() {
+object GuildConfigTable : LongIdTable() {
 	val guild = varchar("guild", 256) // The guild
 	val punishmentLogChannel = varchar("punishmentLogChannel", 256) // The punishment log channel ID
 	val botLogChannel = varchar("botLogChannel", 256) // The bot log channel ID
 }
 
 private fun ensureHasConfig(guildId: Snowflake) {
-		if ((GuildConfigTable.select(GuildConfigTable.guild eq guildId.value.toString()).fetchSize ?: 0) == 0) {
-			GuildConfigTable.insert { row ->
-				row[guild] = guildId.value.toString()
-				row[punishmentLogChannel] = ""
-				row[botLogChannel] = ""
-			}
+	if ((GuildConfigTable.select(GuildConfigTable.guild eq guildId.value.toString()).fetchSize ?: 0) == 0) {
+		GuildConfigTable.insert { row ->
+			row[guild] = guildId.value.toString()
+			row[punishmentLogChannel] = ""
+			row[botLogChannel] = ""
 		}
+	}
 }
 
 private fun setGuildConfig(guild: Snowflake, column: Column<String>, value: String) {
@@ -48,7 +48,7 @@ data class GuildConfig(
 	val guild: Snowflake,
 	var punishmentLogChannel: Snowflake?,
 	var botLogChannel: Snowflake?
-	)
+)
 
 var GuildBehavior.config: GuildConfig
 	get() = transaction {
@@ -60,7 +60,11 @@ var GuildBehavior.config: GuildConfig
 	}
 	set(value) {
 		transaction {
-			setGuildConfig(this@config.id, GuildConfigTable.punishmentLogChannel, value.punishmentLogChannel?.value.toString())
+			setGuildConfig(
+				this@config.id,
+				GuildConfigTable.punishmentLogChannel,
+				value.punishmentLogChannel?.value.toString()
+			)
 			setGuildConfig(this@config.id, GuildConfigTable.botLogChannel, value.botLogChannel?.value.toString())
 		}
 	}
