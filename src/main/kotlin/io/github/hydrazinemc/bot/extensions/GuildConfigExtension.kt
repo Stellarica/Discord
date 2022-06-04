@@ -11,7 +11,7 @@ import dev.kord.common.entity.Permission
 import dev.kord.rest.builder.message.create.embed
 import io.github.hydrazinemc.bot.database.config
 
-class GuildConfigExtension: Extension() {
+class GuildConfigExtension : Extension() {
 	override val name = "config"
 	override suspend fun setup() {
 		publicSlashCommand(::GuildConfigArgs) {
@@ -26,7 +26,9 @@ class GuildConfigExtension: Extension() {
 					"pc" -> conf.punishmentLogChannel = arguments.value.id
 					"blc" -> conf.botLogChannel = arguments.value.id
 					else -> {
-						respond { content = "Somehow you chose an invalid option. This shouldn't be possible, and is a bug" }
+						respond {
+							content = "Somehow you chose an invalid option. This shouldn't be possible, and is a bug"
+						}
 						return@action
 					}
 				}
@@ -42,10 +44,13 @@ class GuildConfigExtension: Extension() {
 			check { hasPermission(Permission.ManageGuild) }
 			action {
 				val conf = guild!!.config
-				respond { embed {
-					title = "HydrazineBot Configuration"
-					description = "Punishment Log: ${conf.punishmentLogChannel}\nBot Log: ${conf.botLogChannel}"
-				} }
+				respond {
+					embed {
+						title = "HydrazineBot Configuration"
+						description =
+							"Punishment Log: <#${conf.punishmentLogChannel}>\nBot Log: <#${conf.botLogChannel}>"
+					}
+				}
 			}
 		}
 	}

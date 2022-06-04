@@ -1,9 +1,10 @@
 package io.github.hydrazinemc.bot.extensions.moderation
 
+import com.kotlindiscord.kord.extensions.time.TimestampType
+import com.kotlindiscord.kord.extensions.time.toDiscord
 import dev.kord.common.entity.Snowflake
 import dev.kord.core.behavior.GuildBehavior
 import dev.kord.core.behavior.UserBehavior
-import dev.kord.core.entity.User
 import io.github.hydrazinemc.bot.getSnowflake
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
@@ -23,7 +24,8 @@ data class Punishment(
 	val reason: String,
 	val expireTime: Instant,
 	val timeApplied: Instant,
-	val pardoner: Snowflake?) {
+	val pardoner: Snowflake?
+) {
 	val expired: Boolean
 		get() = expireTime.toEpochMilliseconds() < Clock.System.now().toEpochMilliseconds()
 	val pardoned: Boolean
@@ -31,16 +33,21 @@ data class Punishment(
 
 	fun getFormattedText(): String {
 		return """
-			ID: $id
-			Guild: <todo>
-			Punisher: $punisher
-			Target: $target
-			Type: $type
-			Reason: $reason
-			Expire Time: $expireTime
-			Time Applied: $timeApplied
-			Pardoned By: $pardoner
-		""".trimIndent()
+			**Punishment ID**: `$id`
+			**Punisher**: <@$punisher>
+			**Target**: <@$target>
+			**Type**: $type (${if (pardoned) "Pardoned" else if (expired) "Expired" else "Active"})
+			**Reason**: $reason
+			**Expire Time**: ${
+			if (expireTime == Instant.DISTANT_FUTURE) {
+				"Never"
+			} else {
+				expireTime.toDiscord(TimestampType.ShortDateTime)
+			}
+		}
+			**Time Applied**: ${timeApplied.toDiscord(TimestampType.ShortDateTime)}
+		""".trimIndent() +
+				if (pardoned) "\n**Pardoned By**: <@$pardoner>" else ""
 	}
 }
 
@@ -80,11 +87,11 @@ fun getPunishment(row: ResultRow?): Punishment? {
 	)
 }
 
-fun getPunishment(punishmentID: Long) : Punishment? = transaction {
+fun getPunishment(punishmentID: Long): Punishment? = transaction {
 	getPunishment(PunishmentLogTable.select { PunishmentLogTable.id eq punishmentID }.firstOrNull())
 }
 
-object PunishmentLogTable: LongIdTable() {
+object PunishmentLogTable : LongIdTable() {
 	val guild = varchar("guild", 256) // The guild this took place in
 	val expireTime = long("expireTime") // punishment expiration time
 	val timeApplied = long("timeApplied") // time punishment was applied
