@@ -1,4 +1,4 @@
-package io.github.hydrazinemc.bot.extensions
+package io.github.hydrazinemc.bot.extensions.config
 
 import com.kotlindiscord.kord.extensions.checks.hasPermission
 import com.kotlindiscord.kord.extensions.commands.Arguments
@@ -9,7 +9,6 @@ import com.kotlindiscord.kord.extensions.extensions.publicSlashCommand
 import com.kotlindiscord.kord.extensions.types.respond
 import dev.kord.common.entity.Permission
 import dev.kord.rest.builder.message.create.embed
-import io.github.hydrazinemc.bot.database.config
 
 class GuildConfigExtension : Extension() {
 	override val name = "config"

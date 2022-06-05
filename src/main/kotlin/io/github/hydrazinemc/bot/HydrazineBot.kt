@@ -4,9 +4,9 @@ import com.kotlindiscord.kord.extensions.ExtensibleBot
 import com.kotlindiscord.kord.extensions.utils.env
 import dev.kord.common.entity.PresenceStatus
 import dev.kord.common.entity.Snowflake
-import io.github.hydrazinemc.bot.database.GuildConfigTable
+import io.github.hydrazinemc.bot.extensions.config.GuildConfigTable
 import io.github.hydrazinemc.bot.extensions.BotStatusExtension
-import io.github.hydrazinemc.bot.extensions.GuildConfigExtension
+import io.github.hydrazinemc.bot.extensions.config.GuildConfigExtension
 import io.github.hydrazinemc.bot.extensions.moderation.ModerationExtension
 import io.github.hydrazinemc.bot.extensions.moderation.PunishmentLogTable
 import mu.KotlinLogging

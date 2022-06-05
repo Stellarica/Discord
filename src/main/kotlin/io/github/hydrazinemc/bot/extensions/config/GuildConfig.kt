@@ -1,4 +1,4 @@
-package io.github.hydrazinemc.bot.database
+package io.github.hydrazinemc.bot.extensions.config
 
 import dev.kord.common.entity.Snowflake
 import dev.kord.core.behavior.GuildBehavior
