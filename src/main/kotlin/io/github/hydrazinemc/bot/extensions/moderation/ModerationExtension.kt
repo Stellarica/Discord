@@ -16,8 +16,6 @@ import com.kotlindiscord.kord.extensions.extensions.publicSlashCommand
 import com.kotlindiscord.kord.extensions.time.TimestampType
 import com.kotlindiscord.kord.extensions.time.toDiscord
 import com.kotlindiscord.kord.extensions.types.respond
-import com.kotlindiscord.kord.extensions.utils.capitalizeWords
-import dev.kord.common.Color
 import dev.kord.common.entity.Permission
 import dev.kord.rest.builder.message.create.embed
 import kotlinx.datetime.Clock
@@ -106,6 +104,7 @@ class ModerationExtension : Extension() {
 			action {
 				var text = ""
 				arguments.user.punishments.forEach {
+					if (it.guild != guild!!.id) return@forEach // only show punishments for this guild
 					text += it.getFormattedText() + "\n\n"
 				}
 				respond {
