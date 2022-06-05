@@ -3,6 +3,7 @@ package io.github.hydrazinemc.bot.extensions.moderation
 import com.kotlindiscord.kord.extensions.DISCORD_GREEN
 import com.kotlindiscord.kord.extensions.DISCORD_RED
 import com.kotlindiscord.kord.extensions.DISCORD_YELLOW
+import com.kotlindiscord.kord.extensions.annotations.DoNotChain
 import com.kotlindiscord.kord.extensions.checks.hasPermission
 import com.kotlindiscord.kord.extensions.commands.Arguments
 import com.kotlindiscord.kord.extensions.commands.application.slash.converters.impl.stringChoice
@@ -18,7 +19,10 @@ import com.kotlindiscord.kord.extensions.time.TimestampType
 import com.kotlindiscord.kord.extensions.time.toDiscord
 import com.kotlindiscord.kord.extensions.types.respond
 import com.kotlindiscord.kord.extensions.types.respondEphemeral
+import com.kotlindiscord.kord.extensions.utils.mute
+import com.kotlindiscord.kord.extensions.utils.timeout
 import dev.kord.common.entity.Permission
+import dev.kord.core.behavior.ban
 import dev.kord.rest.builder.message.create.embed
 import io.github.hydrazinemc.bot.sendModerationEmbed
 import kotlinx.datetime.Clock
@@ -48,6 +52,25 @@ class ModerationExtension : Extension() {
 					Clock.System.now(),
 					null
 				)
+				val target = guild!!.getMember(data.target)
+				when (data.type) {
+					PunishmentType.MUTE -> {
+						target.mute(data.reason)
+					}
+					PunishmentType.BAN -> {
+						target.ban {
+							reason = data.reason
+							this.deleteMessagesDays = 0
+						}
+					}
+					PunishmentType.KICK -> {
+						target.kick(data.reason)
+					}
+					PunishmentType.TIMEOUT -> {
+						target.timeout(data.expireTime - Clock.System.now(), data.reason)
+					}
+					PunishmentType.WARN -> {}
+				}
 				data.id = logPunishmentToDatabase(data) // rather than getting it from the db, we can fake it as it won't have changed
 				respond { content = "Not yet implemented" }
 				guild!!.sendModerationEmbed {
