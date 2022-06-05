@@ -123,10 +123,10 @@ object PunishmentLogTable : LongIdTable() {
 
 fun logPunishmentToDatabase(
 	data: Punishment
-) {
-	transaction {
+): Long? {
+	return transaction {
 		// todo: don't repeat this here (from updatePunishment)
-		PunishmentLogTable.insert { row ->
+		return@transaction PunishmentLogTable.insert { row ->
 			row[guild] = data.guild.value.toString()
 			row[expireTime] = data.expireTime.toEpochMilliseconds()
 			row[timeApplied] = data.timeApplied.toEpochMilliseconds()
@@ -135,7 +135,7 @@ fun logPunishmentToDatabase(
 			row[punisher] = data.punisher.value.toString()
 			row[target] = data.target.value.toString()
 			row[pardoned] = data.pardoner?.value.toString()
-		}
+		}.resultedValues?.firstOrNull()?.get(PunishmentLogTable.id)?.value
 	}
 }
 

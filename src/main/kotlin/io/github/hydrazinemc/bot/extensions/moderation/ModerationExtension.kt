@@ -12,12 +12,15 @@ import com.kotlindiscord.kord.extensions.commands.converters.impl.long
 import com.kotlindiscord.kord.extensions.commands.converters.impl.string
 import com.kotlindiscord.kord.extensions.commands.converters.impl.user
 import com.kotlindiscord.kord.extensions.extensions.Extension
+import com.kotlindiscord.kord.extensions.extensions.ephemeralSlashCommand
 import com.kotlindiscord.kord.extensions.extensions.publicSlashCommand
 import com.kotlindiscord.kord.extensions.time.TimestampType
 import com.kotlindiscord.kord.extensions.time.toDiscord
 import com.kotlindiscord.kord.extensions.types.respond
+import com.kotlindiscord.kord.extensions.types.respondEphemeral
 import dev.kord.common.entity.Permission
 import dev.kord.rest.builder.message.create.embed
+import io.github.hydrazinemc.bot.sendModerationEmbed
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 
@@ -26,7 +29,7 @@ class ModerationExtension : Extension() {
 
 	override suspend fun setup() {
 
-		publicSlashCommand(::PunishCommandArgs) {
+		ephemeralSlashCommand(::PunishCommandArgs) {
 			name = "punish"
 			description = "Punish a user"
 
@@ -45,12 +48,17 @@ class ModerationExtension : Extension() {
 					Clock.System.now(),
 					null
 				)
-				logPunishmentToDatabase(data)
+				data.id = logPunishmentToDatabase(data) // rather than getting it from the db, we can fake it as it won't have changed
 				respond { content = "Not yet implemented" }
+				guild!!.sendModerationEmbed {
+					title = "User Punished"
+					description = data.getFormattedText()
+					color = DISCORD_RED
+				}
 			}
 		}
 
-		publicSlashCommand(::PardonCommandArgs) {
+		ephemeralSlashCommand(::PardonCommandArgs) {
 			name = "pardon"
 			description = "Pardon a punishment"
 			action {
@@ -94,6 +102,11 @@ class ModerationExtension : Extension() {
 					title = "Pardon Successful"
 					description = "You have successfully pardoned <@${pun.target}>'s ${pun.type.toString().lowercase()}"
 				}}
+				guild!!.sendModerationEmbed {
+					color = DISCORD_GREEN
+					title = "Punishment Pardoned"
+					description = "<@${pun.target}>'s ${pun.type.toString().lowercase()} was pardoned by <@${pun.pardoner}>"
+				}
 			}
 		}
 
