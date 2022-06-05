@@ -9,10 +9,12 @@ import io.github.hydrazinemc.bot.getSnowflake
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import org.jetbrains.exposed.dao.id.LongIdTable
+import org.jetbrains.exposed.sql.Op
 import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.select
+import org.jetbrains.exposed.sql.statements.UpdateBuilder
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.update
 
@@ -57,18 +59,13 @@ data class Punishment(
  * Global (cross-guild) punishments for this user
  */
 val UserBehavior.punishments: Set<Punishment>
-	get() = transaction {
-		val punishments = mutableListOf<Punishment>()
-		PunishmentLogTable.select { PunishmentLogTable.target eq this@punishments.id.value.toString() }.forEach { row ->
-			getPunishment(row)?.let { punishments.add(it) }
-		}
-		return@transaction punishments.toSet()
-	}
+	get() = getPunishments(PunishmentLogTable.target eq this@punishments.id.value.toString())
+ val GuildBehavior.punishments: Set<Punishment>
+	get() = getPunishments(PunishmentLogTable.guild eq this@punishments.id.value.toString())
 
-private val GuildBehavior.punishments: Set<Punishment>
-	get() = transaction {
+private fun getPunishments(b: Op<Boolean>): Set<Punishment> = transaction {
 		val punishments = mutableListOf<Punishment>()
-		PunishmentLogTable.select { PunishmentLogTable.guild eq this@punishments.id.value.toString() }.forEach { row ->
+		PunishmentLogTable.select { b }.forEach { row ->
 			getPunishment(row)?.let { punishments.add(it) }
 		}
 		return@transaction punishments.toSet()
@@ -78,9 +75,9 @@ fun getPunishment(row: ResultRow?): Punishment? {
 	row ?: return null
 	return Punishment(
 		row[PunishmentLogTable.id].value,
-		Snowflake(row[PunishmentLogTable.guild]),
-		Snowflake(row[PunishmentLogTable.punisher]),
-		Snowflake(row[PunishmentLogTable.target]),
+		getSnowflake(row[PunishmentLogTable.guild])!!,
+		getSnowflake(row[PunishmentLogTable.punisher])!!,
+		getSnowflake(row[PunishmentLogTable.target])!!,
 		PunishmentType.valueOf(row[PunishmentLogTable.type]),
 		row[PunishmentLogTable.reason],
 		Instant.fromEpochMilliseconds(row[PunishmentLogTable.expireTime]),
@@ -96,16 +93,20 @@ fun getPunishment(punishmentID: Long): Punishment? = transaction {
 fun updatePunishment(punishmentID: Long, data: Punishment) {
 	transaction {
 		PunishmentLogTable.update({ PunishmentLogTable.id eq punishmentID}) {
-			it[guild] = data.guild.value.toString()
-			it[expireTime] = data.expireTime.toEpochMilliseconds()
-			it[timeApplied] = data.timeApplied.toEpochMilliseconds()
-			it[reason] = data.reason
-			it[type] = data.type.toString()
-			it[punisher] = data.punisher.value.toString()
-			it[target] = data.target.value.toString()
-			it[pardoned] = data.pardoner?.value.toString()
+			update(it, data)
 		}
 	}
+}
+
+private fun <t>update(b: UpdateBuilder<t>, data: Punishment) {
+	b[PunishmentLogTable.guild] = data.guild.value.toString()
+	b[PunishmentLogTable.expireTime] = data.expireTime.toEpochMilliseconds()
+	b[PunishmentLogTable.timeApplied] = data.timeApplied.toEpochMilliseconds()
+	b[PunishmentLogTable.reason] = data.reason
+	b[PunishmentLogTable.type] = data.type.toString()
+	b[PunishmentLogTable.punisher] = data.punisher.value.toString()
+	b[PunishmentLogTable.target] = data.target.value.toString()
+	b[PunishmentLogTable.pardoned] = data.pardoner?.value.toString()
 }
 
 object PunishmentLogTable : LongIdTable() {
@@ -121,24 +122,10 @@ object PunishmentLogTable : LongIdTable() {
 }
 
 
-fun logPunishmentToDatabase(
-	data: Punishment
-): Long? {
-	return transaction {
-		// todo: don't repeat this here (from updatePunishment)
+fun logPunishmentToDatabase(data: Punishment): Long? = transaction {
 		return@transaction PunishmentLogTable.insert { row ->
-			row[guild] = data.guild.value.toString()
-			row[expireTime] = data.expireTime.toEpochMilliseconds()
-			row[timeApplied] = data.timeApplied.toEpochMilliseconds()
-			row[reason] = data.reason
-			row[type] = data.type.toString()
-			row[punisher] = data.punisher.value.toString()
-			row[target] = data.target.value.toString()
-			row[pardoned] = data.pardoner?.value.toString()
+			update(row, data)
 		}.resultedValues?.firstOrNull()?.get(PunishmentLogTable.id)?.value
 	}
-}
 
-enum class PunishmentType {
-	WARN, MUTE, TIMEOUT, KICK, BAN
-}
+enum class PunishmentType { WARN, MUTE, TIMEOUT, KICK, BAN }
