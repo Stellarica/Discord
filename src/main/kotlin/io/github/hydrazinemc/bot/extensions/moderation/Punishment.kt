@@ -10,21 +10,23 @@ import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import org.jetbrains.exposed.dao.id.LongIdTable
 import org.jetbrains.exposed.sql.ResultRow
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.sql.update
 
 
 data class Punishment(
-	val id: Long? = null,
-	val guild: Snowflake,
-	val punisher: Snowflake,
-	val target: Snowflake,
-	val type: PunishmentType,
-	val reason: String,
-	val expireTime: Instant,
-	val timeApplied: Instant,
-	val pardoner: Snowflake?
+	var id: Long? = null,
+	var guild: Snowflake,
+	var punisher: Snowflake,
+	var target: Snowflake,
+	var type: PunishmentType,
+	var reason: String,
+	var expireTime: Instant,
+	var timeApplied: Instant,
+	var pardoner: Snowflake?
 ) {
 	val expired: Boolean
 		get() = expireTime.toEpochMilliseconds() < Clock.System.now().toEpochMilliseconds()
@@ -91,6 +93,21 @@ fun getPunishment(punishmentID: Long): Punishment? = transaction {
 	getPunishment(PunishmentLogTable.select { PunishmentLogTable.id eq punishmentID }.firstOrNull())
 }
 
+fun updatePunishment(punishmentID: Long, data: Punishment) {
+	transaction {
+		PunishmentLogTable.update({ PunishmentLogTable.id eq punishmentID}) {
+			it[guild] = data.guild.value.toString()
+			it[expireTime] = data.expireTime.toEpochMilliseconds()
+			it[timeApplied] = data.timeApplied.toEpochMilliseconds()
+			it[reason] = data.reason
+			it[type] = data.type.toString()
+			it[punisher] = data.punisher.value.toString()
+			it[target] = data.target.value.toString()
+			it[pardoned] = data.pardoner?.value.toString()
+		}
+	}
+}
+
 object PunishmentLogTable : LongIdTable() {
 	val guild = varchar("guild", 256) // The guild this took place in
 	val expireTime = long("expireTime") // punishment expiration time
@@ -108,6 +125,7 @@ fun logPunishmentToDatabase(
 	data: Punishment
 ) {
 	transaction {
+		// todo: don't repeat this here (from updatePunishment)
 		PunishmentLogTable.insert { row ->
 			row[guild] = data.guild.value.toString()
 			row[expireTime] = data.expireTime.toEpochMilliseconds()

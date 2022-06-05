@@ -1,5 +1,8 @@
 package io.github.hydrazinemc.bot.extensions.moderation
 
+import com.kotlindiscord.kord.extensions.DISCORD_GREEN
+import com.kotlindiscord.kord.extensions.DISCORD_RED
+import com.kotlindiscord.kord.extensions.DISCORD_YELLOW
 import com.kotlindiscord.kord.extensions.checks.hasPermission
 import com.kotlindiscord.kord.extensions.commands.Arguments
 import com.kotlindiscord.kord.extensions.commands.application.slash.converters.impl.stringChoice
@@ -11,7 +14,10 @@ import com.kotlindiscord.kord.extensions.commands.converters.impl.user
 import com.kotlindiscord.kord.extensions.extensions.Extension
 import com.kotlindiscord.kord.extensions.extensions.publicSlashCommand
 import com.kotlindiscord.kord.extensions.time.TimestampType
+import com.kotlindiscord.kord.extensions.time.toDiscord
 import com.kotlindiscord.kord.extensions.types.respond
+import com.kotlindiscord.kord.extensions.utils.capitalizeWords
+import dev.kord.common.Color
 import dev.kord.common.entity.Permission
 import dev.kord.rest.builder.message.create.embed
 import kotlinx.datetime.Clock
@@ -41,7 +47,7 @@ class ModerationExtension : Extension() {
 					Clock.System.now(),
 					null
 				)
-				punish(data)
+				logPunishmentToDatabase(data)
 				respond { content = "Not yet implemented" }
 			}
 		}
@@ -51,7 +57,45 @@ class ModerationExtension : Extension() {
 			description = "Pardon a punishment"
 			action {
 				val pun = getPunishment(arguments.id)
-				// Need to handle: punishment not in guild, punishment pardoned, punishment doesn't exist
+				if (pun == null) {
+					respond { embed {
+						color = DISCORD_RED
+						title = "Not Found"
+						description = "No punishment with ID `${arguments.id}` was found"
+					}}
+					return@action
+				}
+				if (pun.guild != guild!!.id) {
+					respond {embed {
+						color = DISCORD_RED
+						title = "Not Found"
+						description = "That punishment does not apply to this Guild!"
+					}}
+					return@action
+				}
+				if (pun.pardoned) {
+					respond { embed {
+						color = DISCORD_YELLOW
+						title = "Already Pardoned"
+						description = "This punishment has already been pardoned by <@${pun.pardoner}>"
+					}}
+					return@action
+				}
+				if (pun.expired) {
+					respond { embed {
+						color = DISCORD_YELLOW
+						title = "Punishment Expired"
+						description = "This punishment already expired on ${pun.expireTime.toDiscord(TimestampType.ShortDateTime)}"
+					}}
+					return@action
+				}
+				pun.pardoner = user.id
+				updatePunishment(pun.id!!, pun)
+				respond { embed {
+					color = DISCORD_GREEN
+					title = "Pardon Successful"
+					description = "You have successfully pardoned <@${pun.target}>'s ${pun.type.toString().lowercase()}"
+				}}
 			}
 		}
 
@@ -72,10 +116,6 @@ class ModerationExtension : Extension() {
 				}
 			}
 		}
-	}
-
-	private fun punish(data: Punishment) {
-		logPunishmentToDatabase(data)
 	}
 
 	inner class PardonCommandArgs : Arguments() {
