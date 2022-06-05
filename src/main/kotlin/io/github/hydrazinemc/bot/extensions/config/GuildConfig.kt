@@ -19,7 +19,7 @@ object GuildConfigTable : LongIdTable() {
 }
 
 private fun ensureHasConfig(guildId: Snowflake) {
-	if ((GuildConfigTable.select(GuildConfigTable.guild eq guildId.value.toString()).fetchSize ?: 0) == 0) {
+	if ((GuildConfigTable.select(GuildConfigTable.guild eq guildId.value.toString())).firstOrNull() == null) {
 		GuildConfigTable.insert { row ->
 			row[guild] = guildId.value.toString()
 			row[punishmentLogChannel] = ""
