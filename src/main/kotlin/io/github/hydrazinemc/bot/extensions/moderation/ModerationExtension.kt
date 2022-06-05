@@ -120,10 +120,18 @@ class ModerationExtension : Extension() {
 					if (it.guild != guild!!.id) return@forEach // only show punishments for this guild
 					text += it.getFormattedText() + "\n\n"
 				}
-				respond {
-					embed {
-						title = "${arguments.user.username}'s History"
-						description = text
+				if (text.isEmpty()) {
+					respond { embed {
+						title = "No Punishments Found"
+						description = "No punishments were found for <@${arguments.user.id}>"
+					}}
+				}
+				else {
+					respond {
+						embed {
+							title = "${arguments.user.username}'s History"
+							description = text
+						}
 					}
 				}
 			}
