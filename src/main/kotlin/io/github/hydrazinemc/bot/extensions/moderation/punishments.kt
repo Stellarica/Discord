@@ -128,4 +128,4 @@ fun logPunishmentToDatabase(data: Punishment): Long? = transaction {
 		}.resultedValues?.firstOrNull()?.get(PunishmentLogTable.id)?.value
 	}
 
-enum class PunishmentType { WARN, MUTE, TIMEOUT, KICK, BAN }
+enum class PunishmentType { WARN, TIMEOUT, KICK, BAN }

@@ -17,11 +17,13 @@ import com.kotlindiscord.kord.extensions.extensions.publicSlashCommand
 import com.kotlindiscord.kord.extensions.time.TimestampType
 import com.kotlindiscord.kord.extensions.time.toDiscord
 import com.kotlindiscord.kord.extensions.types.respond
-import com.kotlindiscord.kord.extensions.utils.mute
-import com.kotlindiscord.kord.extensions.utils.timeout
+import com.kotlindiscord.kord.extensions.utils.timeoutUntil
 import dev.kord.common.entity.Permission
+import dev.kord.common.exception.RequestException
 import dev.kord.core.behavior.ban
+import dev.kord.core.behavior.edit
 import dev.kord.rest.builder.message.create.embed
+import dev.kord.rest.request.KtorRequestException
 import io.github.hydrazinemc.bot.sendModerationEmbed
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
@@ -52,11 +54,8 @@ class ModerationExtension : Extension() {
 				)
 				val target = guild!!.getMember(data.target)
 				when (data.type) {
-					PunishmentType.MUTE -> {
-						target.mute(data.reason)
-					}
 					PunishmentType.BAN -> {
-						target.ban {
+						guild!!.ban(data.target) {
 							reason = data.reason
 							this.deleteMessagesDays = 0
 						}
@@ -65,12 +64,26 @@ class ModerationExtension : Extension() {
 						target.kick(data.reason)
 					}
 					PunishmentType.TIMEOUT -> {
-						target.timeout(data.expireTime - Clock.System.now(), data.reason)
+						try {
+							guild!!.getMember(data.target).edit {
+								timeoutUntil = Instant.fromEpochSeconds(data.expireTime.epochSeconds - Clock.System.now().epochSeconds)
+							}
+						}
+						catch (e: KtorRequestException) {
+							respond { embed {
+								description = "Failed to timeout user"
+								color = DISCORD_RED
+							} }
+							return@action
+						}
 					}
 					PunishmentType.WARN -> {}
 				}
 				data.id = logPunishmentToDatabase(data) // rather than getting it from the db, we can fake it as it won't have changed
-				respond { content = "Not yet implemented" }
+				respond { embed {
+					color = DISCORD_GREEN
+					description = "Success! Punishment logged."
+				} }
 				guild!!.sendModerationEmbed {
 					title = "User Punished"
 					description = data.getFormattedText()
@@ -182,7 +195,6 @@ class ModerationExtension : Extension() {
 			name = "action"
 			description = "The action to take"
 			choices = mutableMapOf(
-				"mute" to "MUTE",
 				"kick" to "KICK",
 				"timeout" to "TIMEOUT",
 				"ban" to "BAN"
