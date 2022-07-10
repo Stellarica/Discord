@@ -17,6 +17,11 @@ repositories {
         name = "Kotlin Discord"
         url = uri("https://maven.kotlindiscord.com/repository/maven-public/")
     }
+    
+    // required for kord snapshot versions
+    maven {
+        url = uri("https://oss.sonatype.org/content/repositories/snapshots")
+    }
 }
 
 dependencies {
