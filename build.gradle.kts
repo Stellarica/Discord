@@ -41,8 +41,7 @@ dependencies {
 }
 
 application {
-    // This is deprecated, but the Shadow plugin requires it
-    mainClassName = "io.github.hydrazinemc.bot.HydrazineBotKt"
+    mainClass.set("io.github.hydrazinemc.bot.HydrazineBotKt")
 }
 
 tasks.withType<KotlinCompile> {
