@@ -7,7 +7,9 @@ import com.kotlindiscord.kord.extensions.commands.converters.impl.string
 import com.kotlindiscord.kord.extensions.extensions.Extension
 import com.kotlindiscord.kord.extensions.extensions.publicSlashCommand
 import com.kotlindiscord.kord.extensions.types.respond
+import com.kotlindiscord.kord.extensions.utils.capitalizeWords
 import dev.kord.common.entity.Permission
+import dev.kord.rest.builder.message.create.embed
 import io.github.hydrazinemc.bot.logger
 
 class BotStatusExtension : Extension() {
@@ -28,7 +30,11 @@ class BotStatusExtension : Extension() {
 					}
 				}
 				logger.info { "Set bot status to ${arguments.type} ${arguments.text}" }
-				respond { content = "Set status to ${arguments.type} ${arguments.text}" }
+				respond { embed {
+					this.title = "Bot Status Set"
+					this.description = arguments.type.capitalizeWords() +
+							if(arguments.type == "listening") {" to "} else {" "} + arguments.text
+				}}
 			}
 		}
 	}
