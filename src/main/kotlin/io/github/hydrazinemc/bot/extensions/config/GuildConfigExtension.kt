@@ -9,10 +9,13 @@ import com.kotlindiscord.kord.extensions.extensions.publicSlashCommand
 import com.kotlindiscord.kord.extensions.types.respond
 import dev.kord.common.entity.Permission
 import dev.kord.rest.builder.message.create.embed
+import io.github.hydrazinemc.bot.getConfig
+import io.github.hydrazinemc.bot.setConfig
 
 class GuildConfigExtension : Extension() {
 	override val name = "config"
 	override suspend fun setup() {
+
 		publicSlashCommand(::GuildConfigArgs) {
 			name = "set-config"
 			description = "Configure bot settings"
@@ -20,7 +23,7 @@ class GuildConfigExtension : Extension() {
 			check { hasPermission(Permission.ManageGuild) }
 			action {
 				// ngl this seems like purified jank
-				val conf = guild!!.config
+				val conf = guild!!.getConfig()
 				when (arguments.option) {
 					"pc" -> conf.punishmentLogChannel = arguments.value.id
 					"blc" -> conf.botLogChannel = arguments.value.id
@@ -31,7 +34,7 @@ class GuildConfigExtension : Extension() {
 						return@action
 					}
 				}
-				guild!!.config = conf
+				guild!!.setConfig(conf)
 				respond { content = "Set ${arguments.option} to ${arguments.value.mention}" }
 			}
 		}
@@ -42,7 +45,7 @@ class GuildConfigExtension : Extension() {
 
 			check { hasPermission(Permission.ManageGuild) }
 			action {
-				val conf = guild!!.config
+				val conf = guild!!.getConfig()
 				respond {
 					embed {
 						title = "HydrazineBot Configuration"

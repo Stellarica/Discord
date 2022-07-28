@@ -30,11 +30,17 @@ class BotStatusExtension : Extension() {
 					}
 				}
 				logger.info { "Set bot status to ${arguments.type} ${arguments.text}" }
-				respond { embed {
-					this.title = "Bot Status Set"
-					this.description = arguments.type.capitalizeWords() +
-							if(arguments.type == "listening") {" to "} else {" "} + arguments.text
-				}}
+				respond {
+					embed {
+						this.title = "Bot Status Set"
+						this.description = arguments.type.capitalizeWords() +
+								if (arguments.type == "listening") {
+									" to "
+								} else {
+									" "
+								} + arguments.text
+					}
+				}
 			}
 		}
 	}

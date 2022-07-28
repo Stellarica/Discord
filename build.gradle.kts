@@ -2,7 +2,10 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     application
+
     kotlin("jvm")
+    kotlin("plugin.serialization")
+
     id("com.github.johnrengelman.shadow")
 }
 
@@ -29,10 +32,7 @@ dependencies {
     implementation(libs.kotlin.stdlib)
 
     // Database dependencies
-    implementation(libs.exposed.core)
-    //implementation(libs.exposed.dao)
-    implementation(libs.exposed.jdbc)
-    implementation(libs.sqlite.jdbc)
+    implementation(libs.kmongo)
 
     // Logging dependencies
     implementation(libs.groovy)

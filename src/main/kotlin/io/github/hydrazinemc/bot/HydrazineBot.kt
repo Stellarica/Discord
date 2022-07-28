@@ -2,36 +2,36 @@ package io.github.hydrazinemc.bot
 
 import com.kotlindiscord.kord.extensions.ExtensibleBot
 import com.kotlindiscord.kord.extensions.utils.env
+import com.mongodb.MongoClientSettings
 import dev.kord.common.entity.PresenceStatus
 import dev.kord.common.entity.Snowflake
-import io.github.hydrazinemc.bot.extensions.config.GuildConfigTable
 import io.github.hydrazinemc.bot.extensions.BotStatusExtension
 import io.github.hydrazinemc.bot.extensions.config.GuildConfigExtension
 import io.github.hydrazinemc.bot.extensions.moderation.ModerationExtension
-import io.github.hydrazinemc.bot.extensions.moderation.PunishmentLogTable
+import io.github.hydrazinemc.bot.extensions.moderation.Punishment
 import mu.KotlinLogging
-import org.jetbrains.exposed.sql.Database
-import org.jetbrains.exposed.sql.SchemaUtils
-import org.jetbrains.exposed.sql.Slf4jSqlDebugLogger
-import org.jetbrains.exposed.sql.addLogger
-import org.jetbrains.exposed.sql.transactions.TransactionManager
-import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
-import java.sql.Connection
+import org.bson.UuidRepresentation
+import org.litote.kmongo.coroutine.coroutine
+import org.litote.kmongo.reactivestreams.KMongo
+
 
 val TEST_SERVER_ID = Snowflake(  // Store this as a Discord snowflake, aka an ID
 	env("TEST_SERVER")  // An exception will be thrown if it can't be found
 )
 val logger = KotlinLogging.logger {}
 
+val client = KMongo.createClient(
+	MongoClientSettings.builder()
+		.uuidRepresentation(UuidRepresentation.STANDARD)
+		.build()
+).coroutine
+
+val database = client.getDatabase("hydrazinebot")
+
+val configCollection = database.getCollection<GuildConfig>("guildconfigs")
+val punishmentCollection = database.getCollection<Punishment>("punishments")
+
 suspend fun main() {
-
-	Database.connect("jdbc:sqlite:data.db", "org.sqlite.JDBC")
-	TransactionManager.manager.defaultIsolationLevel = Connection.TRANSACTION_SERIALIZABLE
-
-	newSuspendedTransaction {
-		addLogger(Slf4jSqlDebugLogger)
-		SchemaUtils.create(PunishmentLogTable, GuildConfigTable)
-	}
 
 	val bot = ExtensibleBot(env("TOKEN")) {
 		applicationCommands {
