@@ -33,6 +33,8 @@ data class GuildConfig(
 suspend fun GuildBehavior.getConfig() =
 	configCollection.findOne(GuildConfig::guild eq this@getConfig.id) ?: GuildConfig(this.id, null, null)
 
-suspend fun GuildBehavior.setConfig(value: GuildConfig) =
-	configCollection.findOneAndReplace(GuildConfig::guild eq this@setConfig.id, value)
+suspend fun GuildBehavior.setConfig(value: GuildConfig) {
+	configCollection.deleteMany(GuildConfig::guild eq this@setConfig.id) // just in case helps prevent duplicates
+	configCollection.insertOne(value)
+}
 
