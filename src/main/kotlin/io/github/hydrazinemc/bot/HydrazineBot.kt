@@ -5,8 +5,9 @@ import com.kotlindiscord.kord.extensions.utils.env
 import com.mongodb.MongoClientSettings
 import dev.kord.common.entity.PresenceStatus
 import dev.kord.common.entity.Snowflake
-import io.github.hydrazinemc.bot.extensions.BotStatusExtension
+import io.github.hydrazinemc.bot.extensions.misc.BotStatusExtension
 import io.github.hydrazinemc.bot.extensions.config.GuildConfigExtension
+import io.github.hydrazinemc.bot.extensions.misc.XKCDExtension
 import io.github.hydrazinemc.bot.extensions.moderation.ModerationExtension
 import io.github.hydrazinemc.bot.extensions.moderation.Punishment
 import mu.KotlinLogging
@@ -42,6 +43,7 @@ suspend fun main() {
 			add(::ModerationExtension)
 			add(::BotStatusExtension)
 			add(::GuildConfigExtension)
+			add(::XKCDExtension)
 		}
 		presence {
 			status = PresenceStatus.DoNotDisturb
