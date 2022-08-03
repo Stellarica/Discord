@@ -6,6 +6,7 @@ kord-extensions = "1.5.5-SNAPSHOT"
 logging = "2.1.21"
 logback = "1.2.11"
 kmongo = "4.6.1"
+jsoup = "1.15.2"
 
 [libraries]
 groovy = { module = "org.apache.groovy:groovy", version.ref = "groovy" }
@@ -15,3 +16,5 @@ logback = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
 logging = { module = "io.github.microutils:kotlin-logging", version.ref = "logging" }
 
 kmongo = { module = "org.litote.kmongo:kmongo-coroutine-serialization", version.ref = "kmongo"}
+
+jsoup = { module = "org.jsoup:jsoup", version.ref = "jsoup" }

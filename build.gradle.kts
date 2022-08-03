@@ -31,6 +31,8 @@ dependencies {
     implementation(libs.kord.extensions)
     implementation(libs.kotlin.stdlib)
 
+    implementation(libs.jsoup)
+
     // Database dependencies
     implementation(libs.kmongo)
 
