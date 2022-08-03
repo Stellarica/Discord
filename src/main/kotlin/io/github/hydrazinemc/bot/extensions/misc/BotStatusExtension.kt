@@ -1,4 +1,4 @@
-package io.github.hydrazinemc.bot.extensions
+package io.github.hydrazinemc.bot.extensions.misc
 
 import com.kotlindiscord.kord.extensions.checks.hasPermission
 import com.kotlindiscord.kord.extensions.commands.Arguments
