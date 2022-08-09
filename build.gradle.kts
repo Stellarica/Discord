@@ -37,7 +37,6 @@ dependencies {
     implementation(libs.kmongo)
 
     // Logging dependencies
-    implementation(libs.groovy)
     implementation(libs.logback)
     implementation(libs.logging)
 }

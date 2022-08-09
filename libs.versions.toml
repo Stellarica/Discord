@@ -1,7 +1,6 @@
 [versions]
 kotlin = "1.7.10"  # Note: Plugin versions must be updated in the settings.gradle.kts too
 
-groovy = "4.0.2"
 kord-extensions = "1.5.5-SNAPSHOT"
 logging = "2.1.21"
 logback = "1.2.11"
@@ -9,7 +8,6 @@ kmongo = "4.6.1"
 jsoup = "1.15.2"
 
 [libraries]
-groovy = { module = "org.apache.groovy:groovy", version.ref = "groovy" }
 kord-extensions = { module = "com.kotlindiscord.kord.extensions:kord-extensions", version.ref = "kord-extensions" }
 kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib-jdk8" }
 logback = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
