@@ -1,4 +1,4 @@
-package io.github.hydrazinemc.bot.extensions.misc
+package net.stellarica.bot.extensions
 
 import com.kotlindiscord.kord.extensions.checks.hasPermission
 import com.kotlindiscord.kord.extensions.commands.Arguments
@@ -10,7 +10,7 @@ import com.kotlindiscord.kord.extensions.types.respond
 import com.kotlindiscord.kord.extensions.utils.capitalizeWords
 import dev.kord.common.entity.Permission
 import dev.kord.rest.builder.message.create.embed
-import io.github.hydrazinemc.bot.logger
+import net.stellarica.bot.logger
 
 class BotStatusExtension : Extension() {
 	override val name: String = "status"
