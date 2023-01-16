@@ -6,11 +6,8 @@ import dev.kord.common.entity.PresenceStatus
 import dev.kord.common.entity.Snowflake
 import net.stellarica.bot.extensions.BotStatusExtension
 import mu.KotlinLogging
+import net.stellarica.bot.extensions.AutoRoleExtension
 
-
-val TEST_SERVER_ID = Snowflake(  // Store this as a Discord snowflake, aka an ID
-	env("TEST_SERVER")  // An exception will be thrown if it can't be found
-)
 val logger = KotlinLogging.logger {}
 
 suspend fun main() {
@@ -25,6 +22,7 @@ suspend fun main() {
 		}
 		extensions {
 			add(::BotStatusExtension)
+			add(::AutoRoleExtension)
 		}
 		presence {
 			status = PresenceStatus.DoNotDisturb
