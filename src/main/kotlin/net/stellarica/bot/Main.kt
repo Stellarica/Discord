@@ -7,6 +7,7 @@ import dev.kord.common.entity.Snowflake
 import net.stellarica.bot.extensions.BotStatusExtension
 import mu.KotlinLogging
 import net.stellarica.bot.extensions.AutoRoleExtension
+import net.stellarica.bot.extensions.Sparkles3421Commands
 
 val logger = KotlinLogging.logger {}
 
