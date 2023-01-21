@@ -12,7 +12,7 @@ import dev.kord.rest.builder.message.create.embed
 import net.stellarica.bot.logger
 class Sparkles3421Commands : Extension() {
     override suspend fun setup() {
-        publicSlashCommand(::SlapSlashArgs) {
+        publicSlashCommand(::Sparkles3421InfoArg) {
             name = "info"
             description = "Get Info"
             guild(TEST_SERVER_ID)
@@ -39,7 +39,7 @@ class Sparkles3421Commands : Extension() {
             }
         }
     }
-    inner class Sparkles3421Commands : Arguments() {
+    inner class Sparkles3421InfoArg : Arguments() {
         val weapon by defaultingString {
             name = "target"
             description = "website/discord"
