@@ -23,7 +23,7 @@ suspend fun main() {
 		extensions {
 			add(::BotStatusExtension)
 			add(::AutoRoleExtension)
-			add(::Sparkles3421Commands.kt)
+			add(::Sparkles3421Commands)
 		}
 		presence {
 			status = PresenceStatus.DoNotDisturb
