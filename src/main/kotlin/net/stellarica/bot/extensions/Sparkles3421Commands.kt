@@ -10,7 +10,7 @@ import com.kotlindiscord.kord.extensions.utils.capitalizeWords
 import dev.kord.common.entity.Permission
 import dev.kord.rest.builder.message.create.embed
 import net.stellarica.bot.logger
-class BotStatusExtension : Extension() {
+class Sparkles3421Commands : Extension() {
     override suspend fun setup() {
         publicSlashCommand(::SlapSlashArgs) {
             name = "info"
@@ -44,7 +44,7 @@ class BotStatusExtension : Extension() {
             }
         }
     }
-    inner class SlapSlashArgs : Arguments() {
+    inner class Sparkles3421Commands : Arguments() {
         val weapon by defaultingString {
             name = "target"
             description = "website/discord"
