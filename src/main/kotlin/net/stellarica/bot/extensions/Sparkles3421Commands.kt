@@ -25,15 +25,10 @@ class Sparkles3421Commands : Extension() {
                 }
                 var con = "An internal error has occured"
                 if (arguments.target) {
-                    if (arguments.target == "website") {
-                        con = """The stellarica website is: https://stellarica.net
-                            The wiki is: https://wiki.stellarica.net
-                            The information panel is: https://sparkles3421.github.io/stellarica/info/
-                        """.trimMargin()
-                    } else if (arguments.target == "discord") {
-                        con = "The discord is https://discord.com/invite/sjMY88Wwf8"
-                    } else {
-                        con = "Please set target to 'website' or 'discord'!"
+                    when(arguments.target) {
+                        "website" -> con = "The stellarica website is: https://stellarica.net \n The wiki is: https://wiki.stellarica.net \n The information panel is: https://sparkles3421.github.io/stellarica/info/"
+                        "discord" -> con = "The discord is https://discord.com/invite/sjMY88Wwf8"
+                        else -> con = "Please set target to 'website' or 'discord'!"
                     }
                 } else {
                     con = "Please set a target"
