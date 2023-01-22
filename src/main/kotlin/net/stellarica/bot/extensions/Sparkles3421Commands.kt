@@ -11,6 +11,7 @@ import dev.kord.common.entity.Permission
 import dev.kord.rest.builder.message.create.embed
 import net.stellarica.bot.logger
 class Sparkles3421Commands : Extension() {
+    override val name: String = "Sparkles3421Commands"
     override suspend fun setup() {
         publicSlashCommand(::Sparkles3421InfoArg) {
             name = "info"
