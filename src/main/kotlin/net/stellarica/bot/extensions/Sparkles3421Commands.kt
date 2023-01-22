@@ -34,7 +34,7 @@ class Sparkles3421Commands : Extension() {
         }
     }
     inner class Sparkles3421InfoArg : Arguments() {
-        val target by string {
+        val target by defaultingString  {
             name = "target"
             description = "website/discord"
             defaultValue = "website"
