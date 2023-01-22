@@ -6,17 +6,16 @@ import com.kotlindiscord.kord.extensions.commands.converters.impl.string
 import com.kotlindiscord.kord.extensions.extensions.Extension
 import com.kotlindiscord.kord.extensions.extensions.publicSlashCommand
 import com.kotlindiscord.kord.extensions.types.respond
-import com.kotlindiscord.kord.extensions.utils.capitalizeWords
 import dev.kord.common.entity.Permission
-import dev.kord.rest.builder.message.create.embed
-import net.stellarica.bot.logger
+//import com.kotlindiscord.kord.extensions.utils.capitalizeWords
+//import dev.kord.rest.builder.message.create.embed
+//import net.stellarica.bot.logger
 class Sparkles3421Commands : Extension() {
     override val name: String = "Sparkles3421Commands"
     override suspend fun setup() {
         publicSlashCommand(::Sparkles3421InfoArg) {
             name = "info"
             description = "Get Info"
-            guild(TEST_SERVER_ID)
             action {
                 val kord = this@TestExtension.kord
                 val realTarget = if (arguments.target.id == kord.selfId) {
