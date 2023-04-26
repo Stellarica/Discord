@@ -10,7 +10,6 @@ pluginManagement {
 
 rootProject.name = "StellaricaBot"
 
-enableFeaturePreview("VERSION_CATALOGS")
 
 dependencyResolutionManagement {
 	versionCatalogs {
