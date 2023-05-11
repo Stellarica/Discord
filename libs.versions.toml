@@ -8,8 +8,7 @@ jsoup = "1.15.2"
 
 [libraries]
 kord-extensions = { module = "com.kotlindiscord.kord.extensions:kord-extensions", version.ref = "kord-extensions" }
+kord-extensions-unsafe = { module = "com.kotlindiscord.kord.extensions:unsafe", version.ref = "kord-extensions"}
 kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib-jdk8" }
 logback = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
 logging = { module = "io.github.microutils:kotlin-logging", version.ref = "logging" }
-
-jsoup = { module = "org.jsoup:jsoup", version.ref = "jsoup" }

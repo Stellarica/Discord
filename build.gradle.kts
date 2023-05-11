@@ -20,9 +20,8 @@ repositories {
 
 dependencies {
     implementation(libs.kord.extensions)
+    implementation(libs.kord.extensions.unsafe)
     implementation(libs.kotlin.stdlib)
-
-    implementation(libs.jsoup)
 
     // Logging dependencies
     implementation(libs.logback)
